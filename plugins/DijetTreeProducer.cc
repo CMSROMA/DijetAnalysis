@@ -222,7 +222,13 @@ void DijetTreeProducer::beginJob()
   outTree_->Branch("triggerResult","vector<bool>",&triggerResult_);
 
   //------------------- MC ---------------------------------
-  outTree_->Branch("npu"                  ,&npu_               ,"npu_/I");
+  npu_                = new std::vector<float>;  
+  Number_interactions = new std::vector<int>;
+  OriginBX            = new std::vector<int>;
+ 
+  outTree_->Branch("npu"                  ,"vector<float>"       , &npu_ );
+  outTree_->Branch("PileupInteractions"   ,"vector<int>"       , &Number_interactions );
+  outTree_->Branch("PileupOriginBX"       ,"vector<int>"       , &OriginBX );
   outTree_->Branch("ptHat"                ,&ptHat_             ,"ptHat_/F");
   outTree_->Branch("processID"            ,&processID_         ,"processID_/I");
   outTree_->Branch("weight"               ,&weight_            ,"weight_/F");
@@ -389,12 +395,28 @@ void DijetTreeProducer::analyze(edm::Event const& iEvent, edm::EventSetup const&
   edm::Handle<std::vector<PileupSummaryInfo> > PupInfo;
   if (!iEvent.isRealData()) {
     iEvent.getByLabel(srcPU_,PupInfo);
-    std::vector<PileupSummaryInfo>::const_iterator PUI;
-    for(PUI = PupInfo->begin(); PUI != PupInfo->end(); ++PUI) {
-      if (PUI->getBunchCrossing() == 0) {
-        npu_ = PUI->getTrueNumInteractions();
+
+    if(PupInfo.isValid()) {
+      for( std::vector<PileupSummaryInfo>::const_iterator it = PupInfo->begin(); it != PupInfo->end(); ++it ) {
+	npu_ -> push_back ( it -> getTrueNumInteractions() );
+	//Number_interactions -> push_back ( it->getPU_NumInteractions() ); 
+	//OriginBX -> push_back ( it -> getBunchCrossing());                
+	//debug giulia
+	Number_interactions -> push_back ( 1);
+	OriginBX -> push_back ( 1);                
+	
       }
     }
+    else {
+      edm::LogError("DijetTreeProducer: PileUpError") << "Error! Can't get the product " << srcPU_;
+    }
+    
+    // std::vector<PileupSummaryInfo>::const_iterator PUI;
+    // for(PUI = PupInfo->begin(); PUI != PupInfo->end(); ++PUI) {
+    //   if (PUI->getBunchCrossing() == 0) {
+    //     npu_ = PUI->getTrueNumInteractions();
+    //   }
+    // }
   }// if MC
 
   //-------------- Gen Event Info -----------------------------------
@@ -831,7 +853,10 @@ void DijetTreeProducer::initialize()
   triggerResult_     ->clear();
   
 //----- MC -------
-  npu_ = -999;
+  npu_ ->clear();
+  Number_interactions ->clear();
+  OriginBX            -> clear();
+  
   ptHat_ = -999; 
   processID_ = -999; 
   weight_ = -999;

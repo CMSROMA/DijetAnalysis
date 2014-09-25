@@ -59,7 +59,10 @@ class DijetTreeProducer : public edm::EDAnalyzer
     std::vector<float> *ptGenCA8_,*etaGenCA8_,*phiGenCA8_,*massGenCA8_,*energyGenCA8_;
 
     //---- MC variables ---------------
-    double npu_; 
+    std::vector<float> *npu_; 
+    std::vector<int> *Number_interactions;
+    std::vector <int> *OriginBX;
+   
     float ptHat_; 
     int processID_;
     double weight_;
